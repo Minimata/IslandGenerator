@@ -72,7 +72,7 @@ Just don't kill people with this code please.
 Killing is not nice.
 
 If you reuse this code, that would be nice to mention me somewhere with either :
- - My name and my contact : Alexandre serex - serex.alexandre@gmail.com
+ - My name and my contact : Alexandre Serex - serex.alexandre@gmail.com
  - My pseudonyme and my twitter : Minimata [@EpicMinimata](https://twitter.com/EpicMinimata)
 Whatever suits your goat :)
 
