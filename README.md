@@ -36,7 +36,7 @@ Simplex noise is a simpler, faster to compute Perlin noise. But what is Perlin n
 A "fractaled" Simplex noise is just some layers (called octaves) of simplex noise rescaled and added to each other.
 As for domain warping, go check this [great article](http://www.iquilezles.org/www/articles/warp/warp.htm) by the even greater Inigo Quilez.
 
-## How this works
+## How does this work
 
 I don't know, I'm a programmer, it works and I'm happy, that's it !
 
