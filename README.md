@@ -83,4 +83,4 @@ You're all grown up.
 ## Troubleshooting
 
 I don't know.
-Maybe [that](https://www.google.ch/) ?
+Maybe [that](https://www.google.com/) ?
