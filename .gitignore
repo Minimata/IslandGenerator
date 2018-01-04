@@ -102,3 +102,7 @@ ENV/
 
 # Idea
 .idea/
+
+# Other modules
+noise-master/
+*.png

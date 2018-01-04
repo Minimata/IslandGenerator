@@ -1,0 +1,4 @@
+certifi==2017.11.5
+olefile==0.44
+Pillow==4.3.0
+wincertstore==0.2
