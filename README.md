@@ -66,7 +66,6 @@ If you need some features, you can submit an issue, I'll try not to forget to lo
 Before using any of the outputed heightmap as is by the algorithm, I would suggest applying a blur on it.
 Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave.
 
-
 Do your stuff with the code, fork it, put it in your own code, whatever you want.
 Just don't kill people with this code please.
 Killing is not nice.
@@ -74,6 +73,7 @@ Killing is not nice.
 If you reuse this code, that would be nice to mention me somewhere with either :
  - My name and my contact : Alexandre Serex - serex.alexandre@gmail.com
  - My pseudonyme and my twitter : Minimata [@EpicMinimata](https://twitter.com/EpicMinimata)
+
 Whatever suits your goat :)
 
 Or don't.
