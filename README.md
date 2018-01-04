@@ -80,7 +80,7 @@ Or don't.
 Especially if you kill people with it.
 You're all grown up.
 
-** Troubleshooting
+## Troubleshooting
 
 I don't know.
 Maybe [that](https://www.google.ch/) ?
