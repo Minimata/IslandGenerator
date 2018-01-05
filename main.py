@@ -28,6 +28,7 @@ from PIL import Image, ImageDraw
 from vector2d import Vector
 from noise import snoise2
 
+
 """
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -36,140 +37,51 @@ from noise import snoise2
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
 
-"""
-Initialize the randomness.
-
-The values origin and the ones in the list simplex_offsets are used for the different simplex noises we're going to generate for the domain warping.
-They need to be consistent throughout each warping process.
-"""
-random.seed()
-origin = random.uniform(-10000, 10000)
-simplex_offsets = []
 
 """
-Image initialization. We're using a size of 1024x1024 by default.
+Image initialization. We're using a size of 1024x1024 by default here.
 """
 imgx = 1024
 imgy = 1024
-image = Image.new("RGB", (imgx, imgy))
-
-
-def final_changes(data):
-    """
-    This function gives you control over the data outputed by the update_julia function.
-    Basically the final changes before drawing it, in this state of the program.
-
-    What I do here is add a little more salt, in the form of a ponderated average on some levels with another set of warped noise.
-    """
-    salt = update_warp(freq=1.0)
-    salt = scale_list(salt, 255.0)
-
-    final = []
-    for i, d in enumerate(data):
-        if d > 0:
-            # we add the salt noise proportionally to the mountain height (the lower, the more salt)
-            final.append((3.0 * d + salt[i] * (255.0 / (2.0*(2.0 * 255.0 + d)))) / 4.0)
-        else:
-            final.append(d)
-
-    return final
 
 
 """
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!! FRACTAL CONTROL !!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Values for noise control
 """
 
-"""
-max_it is the number of iterations we're doing for the julia set without breaking.
-Lower values give faster results and wider white areas, but lower fractal definition.
+island_noise_frequency = 5.0  # Frequency of the base noise used for the island. The higher, the smoother the island is.
+radius_offset = 0.0  # Value by which the radius of the island is reduced.
 
-num_frac is the number of fractals we're going to mix up between each other to create the final image.
-
-ponderation_basis is a factor that will be used to randomize the ponderation of the fractals between each other.
-"""
-max_it = 20
-num_frac = 6
-
-
-def make_complex(re1=-0.1, re2=0.0, im1=0.9, im2=1.0):
-    """
-    This is a helper to create a complex number that might be random, depending on the given bounds given to it.
-    I use this function to create the different constant values that are added to Z in the julia function.
-    I found these default values to give the best results, since the julia set of c = 0 + 1j looks the morst like some mountain.
-    Also, it's way more predictable than anything else.
-    """
-    x = random.uniform(re1, re2)
-    y = random.uniform(im1, im2)
-    return x + y * 1j
-
-
-def create_z(x, y, rand):
-    """
-    This creates a number that is rotated, scaled and translated all base on a single random number.
-    It's used to apply these transformations to the Julia fractals we're going to use for our noise.
-    """
-    alpha = 2.0 * math.pi * rand
-    scale = clamp(2.0 * rand, 0.2, 2.0)
-    trans = (rand * 2.0 - 1.0) * 0.2
-    zx = ((x * math.sin(alpha) + y * math.cos(alpha)) + trans) * scale
-    zy = ((x * math.cos(alpha) - y * math.sin(alpha)) + trans) * scale
-    return zx + zy * 1j
-
-
-def warp_to_julia(warp_value):
-    """
-    This function converts the float value of the warped noise at some point (x, y) (so between -1 and 1) to return a float.
-    The returned value will be used by the julia function as it's limit.
-
-    You can play with this function a bit to see how it changes the island.
-    Try to keep the return value positive though.
-    A nice one is to replace the math.fabs by a putting the value to a power of 2.
-    It gives you an less flat island, with cliffs and stuff.
-    """
-    # return (2.0 * warp_value) ** 2  # more cliffs
-    return 2.0 * math.fabs(warp_value) ** 0.3  # more flat (don't try on your girlfriend)
-
-
-"""
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!! NOISE CONTROL !!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-"""
-
-"""
-island_height represent the factor given to the island height at it's center.
-
-radius_offset is the value by which the raidus of the island is reduced to give a smaller island.
-"""
-
-island_height = 20.0
-radius_offset = 0.0
 num_warpings = 2  # This represents the number of warpings we're going to do. 2 is usually enough.
 
+noise_sharpness = 0.4  # value by which the noise is put to the power of. Higher = more cliffs, lower = more flat island
 
-def transform_warp(x, y, simplex):
-    """
-    This function gives you control over the noise you're going to feed to the Julia set for it's limits.
-    It's inputed with the simplex value for the position(x, y)
+"""
+Values for fractal control
+"""
 
-    What I've done here is giving it a factor that depends on the distance to the center of given point (x, y).
-    So basically, making the noise 0 at the edge of the island and island_height at the center of it.
-    """
-    dist_center = math.sqrt((x - imgx / 2) ** 2 + (y - imgy / 2) ** 2) / (imgx / 2)
-    island_radius = (dist_center + radius_offset)
-    factor = 1 - (island_radius ** 2)
-    factor *= island_height
-    if island_radius > 1:
-        factor = 0
-    simplex *= factor
+max_it = 18  # Max number of iterations before breaking for the Julia set calculations
+num_frac = 16  # Number of fractals we're going to use
 
-    return simplex
+constant_re_low = -0.1  # Lower bound of the random real value of the constant that's being added in the Julia function
+constant_re_high = -0.1  # Lower bound of the random real value of the constant that's being added in the Julia function
+constant_im_low = 0.9  # Lower bound of the random real value of the constant that's being added in the Julia function
+constant_im_high = 1.1  # Lower bound of the random real value of the constant that's being added in the Julia function
+
+scale_value_low = 0.2  # Lower bound of the randomized scale value of the fractals
+scale_value_high = 2.0  # Higher bound of the randomized scale value of the fractals
+trans_max_value = 0.0  # Higher value by which the fractal can be transitioned
+rotation_max_value = 1.0  # Higher value by which the fractal can be rotated
+
+
+"""
+Values for final changes control
+"""
+
+salt_frequency = 1.0  # frequency of the final layer of salt
+low_barrier = 32  # Value under which the final height value will be 0. Keep between 0 and 255
+weight_base = 2.0  # weight of the base layer of the island opposing the salt
+weight_salt = 1.0  # weight of the salt layer added to the island
 
 
 """
@@ -179,6 +91,30 @@ def transform_warp(x, y, simplex):
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
+
+
+def create_z(x, y, rand):
+    """
+    This creates a number that is rotated, scaled and translated all base on a single random number.
+    It's used to apply these transformations to the Julia fractals we're going to use for our noise.
+    """
+    alpha = 2.0 * math.pi * rand * rotation_max_value
+    scale = clamp(scale_value_high * rand, scale_value_low, scale_value_high)
+    trans = (rand * 2.0 - 1.0) * trans_max_value
+    zx = ((x * math.sin(alpha) + y * math.cos(alpha)) + trans) * scale
+    zy = ((x * math.cos(alpha) - y * math.sin(alpha)) + trans) * scale
+    return zx + zy * 1j
+
+def make_complex(re1=constant_re_low, re2=constant_re_high, im1=constant_im_low, im2=constant_im_high):
+    """
+    This is a helper to create a complex number that might be random, depending on the given bounds given to it.
+    I use this function to create the different constant values that are added to Z in the julia function.
+    I found these default values to give the best results, since the julia set of c = 0 + 1j looks the morst like some mountain.
+    Also, it's way more predictable than anything else.
+    """
+    x = random.uniform(re1, re2)
+    y = random.uniform(im1, im2)
+    return x + y * 1j
 
 
 def clamp(value, min_value, max_value):
@@ -230,14 +166,14 @@ def update_julia(warp_data=None, rang=1):
         for x in range(imgx):
             zx = x * (xb - xa) / (imgx - 1) + xa
 
-            # Here we're doing an average of all our fractals.
-            v = 0.0
+            # Here we're keeping the max value of each fractal for each point
+            vs = []
             for i in range(num_frac):
                 if warp_data is not None:
-                    v += julia(create_z(zx, zy, zs_rand[i]), cs[i], warp_to_julia(warp_data[count]))
+                    vs.append(julia(create_z(zx, zy, zs_rand[i]), cs[i], warp_to_julia(warp_data[count])))
                 else:
-                    v += julia(create_z(zx, zy, zs_rand[i]), cs[i])
-            v /= num_frac
+                    vs.append(julia(create_z(zx, zy, zs_rand[i]), cs[i]))
+            v = max(vs)
             color.append(v)
             count += 1
     return color
@@ -252,14 +188,14 @@ def update_julia(warp_data=None, rang=1):
 """
 
 
-def fbm(vec, octaves=8, freq=4.0):
+def fbm(vec, octaves=8, freq=5.0):
     """
     Simple wrapper for the function we're using from the noise library.
     """
     return snoise2(vec.x / freq, vec.y / freq, octaves=octaves, base=origin)
 
 
-def warp(p, freq=4.0):
+def warp(p, freq=5.0):
     """
     This is the core warp function, gotten from Inigo Quilez ( <3 )
 
@@ -286,7 +222,36 @@ def seed_warp():
         simplex_offsets.append((random.uniform(-10000, 10000), random.uniform(-10000, 10000)))
 
 
-def update_warp(freq=4.0):
+def transform_warp(x, y, simplex):
+    """
+    This function gives you control over the noise you're going to feed to the Julia set for it's limits.
+    It's inputed with the simplex value for the position(x, y)
+
+    What I've done here is giving it a factor that depends on the distance to the center of given point (x, y).
+    So basically, making the noise 0 at the edge of the island and island_height at the center of it.
+    """
+    dist_center = math.sqrt((x - imgx / 2) ** 2 + (y - imgy / 2) ** 2) / (imgx / 2)
+    island_radius = (dist_center + radius_offset)
+    factor = 1 - (island_radius ** 2)
+    if island_radius > 1:
+        factor = 0
+    simplex *= factor
+
+    return simplex
+
+
+def warp_to_julia(warp_value):
+    """
+    This function converts the float value of the warped noise at some point (x, y) (so between -1 and 1) to return a float.
+    The returned value will be used by the julia function as it's limit.
+
+    You can play with this function a bit to see how it changes the island.
+    Try to keep the return value positive though.
+    """
+    return 2.0 * math.fabs(warp_value) ** noise_sharpness  # more flat (don't try on your girlfriend)
+
+
+def update_warp(freq=5.0):
     """
     This is the function calculating our base warped noise.
 
@@ -341,6 +306,27 @@ def scale_list(l, max_value):
     return [d * factor for d in l]
 
 
+def final_changes(data):
+    """
+    This function gives you control over the data outputed by the update_julia function.
+    Basically the final changes before drawing it, in this state of the program.
+
+    What I do here is add a little more salt, in the form of a ponderated average on some levels with another set of warped noise.
+    """
+    salt = update_warp(freq=salt_frequency)
+    salt = scale_list(salt, 255.0)
+
+    final = []
+    for i, d in enumerate(data):
+        if d > low_barrier:
+            # we add the salt noise proportionally to the mountain height (the lower, the more salt)
+            final.append((weight_base * d + weight_salt * (salt[i] * (255.0 / (2.0*(2.0 * 255.0 + d))))) / (weight_base + weight_salt))
+        else:
+            final.append(0)
+
+    return final
+
+
 """
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -349,8 +335,22 @@ def scale_list(l, max_value):
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 """
 
+
+"""
+Initialize some general value and the randomness.
+
+The values origin and the ones in the list simplex_offsets are used for the different simplex noises we're going to generate for the domain warping.
+They need to be consistent throughout each warping process.
+"""
+
+random.seed()
+origin = random.uniform(-10000, 10000)
+simplex_offsets = []
+image = Image.new("RGB", (imgx, imgy))
+
+
 # We first make a domain warped noise image that we (badly) scale up to a (-1, 1) range.
-data = update_warp()
+data = update_warp(freq=island_noise_frequency)
 data = scale_list(data, 1.0)  # not perfect since there are negative values in data
 # draw(data, filename="noise.png")  # if we want to have a look at our warped noise
 
