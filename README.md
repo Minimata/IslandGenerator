@@ -64,7 +64,7 @@ If you need some features, you can submit an issue, I'll try not to forget to lo
 ## What now ?
 
 Before using any of the outputed heightmap as is by the algorithm, I would suggest applying a blur on it.
-Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave.
+Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave. To solve this you'd need some post-process on the image to work on the gradient of the mountain. Get creative.
 
 Do your stuff with the code, fork it, put it in your own code, whatever you want.
 Just don't kill people with this code please.
