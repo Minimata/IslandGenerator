@@ -36,7 +36,7 @@ Simplex noise is a simpler, faster to compute Perlin noise. But what is Perlin n
 A "fractaled" Simplex noise is just some layers (called octaves) of simplex noise rescaled and added to each other.
 As for domain warping, go check this [great article](http://www.iquilezles.org/www/articles/warp/warp.htm) by the even greater Inigo Quilez.
 
-## How this works
+## How does this work
 
 I don't know, I'm a programmer, it works and I'm happy, that's it !
 
@@ -64,23 +64,23 @@ If you need some features, you can submit an issue, I'll try not to forget to lo
 ## What now ?
 
 Before using any of the outputed heightmap as is by the algorithm, I would suggest applying a blur on it.
-Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave.
-
+Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave. To solve this you'd need some post-process on the image to work on the gradient of the mountain. Get creative.
 
 Do your stuff with the code, fork it, put it in your own code, whatever you want.
 Just don't kill people with this code please.
 Killing is not nice.
 
 If you reuse this code, that would be nice to mention me somewhere with either :
- - My name and my contact : Alexandre serex - serex.alexandre@gmail.com
+ - My name and my contact : Alexandre Serex - serex.alexandre@gmail.com
  - My pseudonyme and my twitter : Minimata [@EpicMinimata](https://twitter.com/EpicMinimata)
+
 Whatever suits your goat :)
 
 Or don't.
 Especially if you kill people with it.
 You're all grown up.
 
-** Troubleshooting
+## Troubleshooting
 
 I don't know.
-Maybe [that](https://www.google.ch/) ?
+Maybe [that](https://www.google.com/) ?
