@@ -52,15 +52,15 @@ Values for noise control
 island_noise_frequency = 7.0  # Frequency of the base noise used for the island. The higher, the smoother the island is.
 radius_offset = 0.0  # Value by which the radius of the island is reduced.
 
-num_warpings = 1  # This represents the number of warpings we're going to do. 2 is usually enough.
+num_warpings = 2  # This represents the number of warpings we're going to do. 2 is usually enough.
 
-noise_sharpness = 1.5  # value by which the noise is put to the power of. Higher = more cliffs, lower = more flat island
+noise_sharpness = 0.4  # value by which the noise is put to the power of. Higher = more cliffs, lower = more flat island
 
 """
 Values for fractal control
 """
 
-max_it = 32  # Max number of iterations before breaking for the Julia set calculations
+max_it = 24  # Max number of iterations before breaking for the Julia set calculations
 num_frac = 8  # Number of fractals we're going to use
 
 constant_re_low = -0.1  # Lower bound of the random real value of the constant that's being added in the Julia function
@@ -272,6 +272,73 @@ def update_warp(freq=5.0):
 """
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!! NORMALS & GRADIENT !!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+"""
+
+
+def get_face_normal(center, p1, p2):
+    first = p1 - center
+    second = p2 - center
+    return first ** second
+
+
+def create_normals(values):
+    normals = []
+    count = 0
+    print("Creating normals...")
+    for x in range(imgx):
+        for y in range(imgy):
+            normal = Vector(0.0, 0.0, 0.0)
+            center = Vector(x, y, values[count])
+            if 0 < x < imgx - 1 and 0 < y < imgy - 1:
+                normal += get_face_normal(center, Vector(x-1, y-1, values[count - imgy - 1]), Vector(x, y-1, values[count - imgy]))
+                normal += get_face_normal(center, Vector(x, y-1, values[count - imgy]), Vector(x+1, y-1, values[count - imgy + 1]))
+                normal += get_face_normal(center, Vector(x+1, y-1, values[count - imgy + 1]), Vector(x+1, y, values[count + 1]))
+                normal += get_face_normal(center, Vector(x+1, y, values[count + 1]), Vector(x+1, y+1, values[count + imgy + 1]))
+                normal += get_face_normal(center, Vector(x+1, y+1, values[count + imgy + 1]), Vector(x, y+1, values[count + imgy]))
+                normal += get_face_normal(center, Vector(x, y+1, values[count + imgy]), Vector(x-1, y+1, values[count + imgy - 1]))
+                normal += get_face_normal(center, Vector(x-1, y+1, values[count + imgy - 1]), Vector(x-1, y, values[count - 1]))
+                normal += get_face_normal(center, Vector(x-1, y, values[count - 1]), Vector(x-1, y-1, values[count - imgy - 1]))
+            else:
+                normal = Vector(0.0, 0.0, 1.0)
+            normals.append(normal.normalize())
+            count += 1
+    return normals
+
+
+def create_gradient_from_normals(normals):
+    gradients = []
+    print("Creating gradients...")
+    for normal in normals:
+        if normal[2] > 0:
+            gradients.append(Vector(normal[0] / normal[2], normal[1] / normal[2], 0.0))
+        else:
+            gradients.append(Vector(normal[0], normal[1], 0.0).normalize())
+    return gradients
+
+
+def draw_from_vectors(normals, filename="island_normals.png"):
+    """
+    This function draws the given data as a 1d list to the image.
+    """
+    red, green, blue = [list(x) for x in zip(*normals)]
+    red = scale_list(red, 255.0)
+    green = scale_list(green, 255.0)
+    blue = scale_list(blue, 255.0)
+
+    im = ImageDraw.Draw(image)
+    for i, p in enumerate(data_xy):
+        im.point(p, fill=(int(red[i]), int(green[i]), int(blue[i])))
+    del im
+    image.save("images/" + filename, "PNG")
+    print("Saved normals as {0}.".format(filename))
+
+
+"""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!! GENERAL CORE !!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -283,11 +350,6 @@ def draw(data, filename="island.png"):
     This function draws the given data as a 1d list to the image.
     """
     draw_data = scale_list(data, 255.0)
-
-    data_xy = []
-    for y in range(imgy):
-        for x in range(imgx):
-            data_xy.append((x, y))
 
     im = ImageDraw.Draw(image)
     for i, p in enumerate(data_xy):
@@ -303,6 +365,8 @@ def scale_list(l, max_value):
     This simple helper scales every item of a list by the necessary factor to the maximum value of the list reaches max_value.
     Not really suited as is for list containing negative values.
     """
+    if max(l) <= 0.0:
+        return [0] * len(l)
     factor = max_value / max(l)
     return [d * factor for d in l]
 
@@ -349,6 +413,11 @@ origin = random.uniform(-10000, 10000)
 simplex_offsets = []
 image = Image.new("RGB", (imgx, imgy))
 
+data_xy = []
+for y in range(imgy):
+    for x in range(imgx):
+        data_xy.append((x, y))
+
 
 # We first make a domain warped noise image that we (badly) scale up to a (-1, 1) range.
 data = update_warp(freq=island_noise_frequency)
@@ -361,24 +430,18 @@ data = scale_list(data, 255.0)
 # draw(update_julia(), filename="julia.png")  # if we want to take a look at some fractals without noise
 
 data = add_salt(data)
-
-# normals = create_normals(data)
-
-# our final changes to the data, and final draw
 draw(data)
+
+normals = create_normals(data)
+draw_from_vectors(normals)
+gradients = create_gradient_from_normals(normals)
+draw_from_vectors(gradients, filename="island_gradients.png")
 
 
 
 """
 Upcoming stuff
 """
-
-def create_normals(values):
-    normal = Vector(0.0)
-    for y in range(imgy):
-        for x in range(imgx):
-            if 0 < x < imgx and 0 < y < imgy:
-                pass
 
 
 """

@@ -9,15 +9,15 @@ To launch the code, simply `python main.py`
 
 Here's what it looks like :
 
-Latest image : ![island](images/island)
+Latest image : ![island](images/island.png)
 
 These are with 2 warpings :
 
-![island1](images/island1)
+![island1](images/island1.png)
 
-![island2](images/island2)
+![island2](images/island2.png)
 
-![island3](images/island3)
+![island3](images/island3.png)
 
 
 ## Dependencies
@@ -62,6 +62,11 @@ Let's take an example : for `z = 0 + 1j`, instead of iterating over and over wit
 This code outputs a 1024x1024 PNG image. It's a heightmap, so it's black and white.
 The code is fully commented for you to understand (I hope) what does what.
 Also, I tried to isolate the meaningful part so that you can easily play with it and change it accordingly to your needs.
+
+Now the code can also output you the normal map and a gradient map, though the results are unreliable.
+You better not use these maps "as is" since some colors might be missing, or be clamped depending of they're scaling.
+Instead, use it as raw values in your code if you need it. 
+Or correct the color output if you need the maps.
 
 ## So is it good code ?
 

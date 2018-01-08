@@ -98,6 +98,20 @@ class Vector(object):
         """
         return sum(a * b for a, b in zip(self, other))
 
+    def cross(self, other):
+        assert len(self) == len(other) == 3
+        c = [self[1] * other[2] - self[2] * other[1],
+             self[2] * other[0] - self[0] * other[2],
+             self[0] * other[1] - self[1] * other[0]]
+
+        return Vector(*c)
+
+    def __pow__(self, other):
+        if isinstance(other, Vector):
+            return self.cross(other)
+        else:
+            raise TypeError("Right handside type of cross product must be a vector.")
+
     def __mul__(self, other):
         """ Returns the dot product of self and other if multiplied
             by another Vector.  If multiplied by an int or float,
