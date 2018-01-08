@@ -9,15 +9,15 @@ To launch the code, simply `python main.py`
 
 Here's what it looks like :
 
-Latest image : ![island](images/island)
+Latest image : ![island](images/island.png)
 
 These are with 2 warpings :
 
-![island1](images/island1)
+![island1](images/island1.png)
 
-![island2](images/island2)
+![island2](images/island2.png)
 
-![island3](images/island3)
+![island3](images/island3.png)
 
 
 ## Dependencies
