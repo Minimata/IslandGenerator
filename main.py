@@ -25,7 +25,7 @@ serex.alexandre@gmail.com
 
 import random, math
 from PIL import Image, ImageDraw
-from vector2d import Vector
+from vector import Vector
 from noise import snoise2
 
 
@@ -49,28 +49,28 @@ imgy = 1024
 Values for noise control
 """
 
-island_noise_frequency = 5.0  # Frequency of the base noise used for the island. The higher, the smoother the island is.
+island_noise_frequency = 7.0  # Frequency of the base noise used for the island. The higher, the smoother the island is.
 radius_offset = 0.0  # Value by which the radius of the island is reduced.
 
-num_warpings = 2  # This represents the number of warpings we're going to do. 2 is usually enough.
+num_warpings = 1  # This represents the number of warpings we're going to do. 2 is usually enough.
 
-noise_sharpness = 0.4  # value by which the noise is put to the power of. Higher = more cliffs, lower = more flat island
+noise_sharpness = 1.5  # value by which the noise is put to the power of. Higher = more cliffs, lower = more flat island
 
 """
 Values for fractal control
 """
 
-max_it = 18  # Max number of iterations before breaking for the Julia set calculations
-num_frac = 16  # Number of fractals we're going to use
+max_it = 32  # Max number of iterations before breaking for the Julia set calculations
+num_frac = 8  # Number of fractals we're going to use
 
 constant_re_low = -0.1  # Lower bound of the random real value of the constant that's being added in the Julia function
-constant_re_high = -0.1  # Lower bound of the random real value of the constant that's being added in the Julia function
-constant_im_low = 0.9  # Lower bound of the random real value of the constant that's being added in the Julia function
-constant_im_high = 1.1  # Lower bound of the random real value of the constant that's being added in the Julia function
+constant_re_high = -0.1  # Higher bound of the random real value of the constant that's being added in the Julia function
+constant_im_low = 0.9  # Lower bound of the random imaginary value of the constant that's being added in the Julia function
+constant_im_high = 1.1  # Higher bound of the random imaginary value of the constant that's being added in the Julia function
 
 scale_value_low = 0.2  # Lower bound of the randomized scale value of the fractals
 scale_value_high = 2.0  # Higher bound of the randomized scale value of the fractals
-trans_max_value = 0.0  # Higher value by which the fractal can be transitioned
+trans_max_value = 0.2  # Higher value by which the fractal can be transitioned
 rotation_max_value = 1.0  # Higher value by which the fractal can be rotated
 
 
@@ -79,7 +79,7 @@ Values for final changes control
 """
 
 salt_frequency = 1.0  # frequency of the final layer of salt
-low_barrier = 32  # Value under which the final height value will be 0. Keep between 0 and 255
+low_barrier = 4  # Value under which the final height value will be 0. Keep between 0 and 255
 weight_base = 2.0  # weight of the base layer of the island opposing the salt
 weight_salt = 1.0  # weight of the salt layer added to the island
 
@@ -104,6 +104,7 @@ def create_z(x, y, rand):
     zx = ((x * math.sin(alpha) + y * math.cos(alpha)) + trans) * scale
     zy = ((x * math.cos(alpha) - y * math.sin(alpha)) + trans) * scale
     return zx + zy * 1j
+
 
 def make_complex(re1=constant_re_low, re2=constant_re_high, im1=constant_im_low, im2=constant_im_high):
     """
@@ -192,7 +193,7 @@ def fbm(vec, octaves=8, freq=5.0):
     """
     Simple wrapper for the function we're using from the noise library.
     """
-    return snoise2(vec.x / freq, vec.y / freq, octaves=octaves, base=origin)
+    return snoise2(vec[0] / freq, vec[1] / freq, octaves=octaves, base=origin)
 
 
 def warp(p, freq=5.0):
@@ -203,7 +204,7 @@ def warp(p, freq=5.0):
     Returns a float value between -1 and 1.
     The more warping, the closer to 0 the value will get, so scale it up before writing it to an image.
     """
-    updated_value = 0.0
+    updated_value = Vector(0, 0)
     for i in range(num_warpings):
         off1 = simplex_offsets[2 * i]
         off2 = simplex_offsets[2 * i + 1]
@@ -293,7 +294,7 @@ def draw(data, filename="island.png"):
         color = int(math.fabs(draw_data[i]))
         im.point(p, fill=(color, color, color))
     del im
-    image.save(filename, "PNG")
+    image.save("images/" + filename, "PNG")
     print("Saved image as {0}.".format(filename))
 
 
@@ -306,7 +307,7 @@ def scale_list(l, max_value):
     return [d * factor for d in l]
 
 
-def final_changes(data):
+def add_salt(data):
     """
     This function gives you control over the data outputed by the update_julia function.
     Basically the final changes before drawing it, in this state of the program.
@@ -359,5 +360,60 @@ data = update_julia(data)
 data = scale_list(data, 255.0)
 # draw(update_julia(), filename="julia.png")  # if we want to take a look at some fractals without noise
 
+data = add_salt(data)
+
+# normals = create_normals(data)
+
 # our final changes to the data, and final draw
-draw(final_changes(data))
+draw(data)
+
+
+
+"""
+Upcoming stuff
+"""
+
+def create_normals(values):
+    normal = Vector(0.0)
+    for y in range(imgy):
+        for x in range(imgx):
+            if 0 < x < imgx and 0 < y < imgy:
+                pass
+
+
+"""
+FVector ATerraGen::SetNormal(int32 x, int32 y, int XIndex, int YIndex) {
+	TArray<FVector> vertices;
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			int32 posX = x + i * CellSize;
+			int32 posY = y + j * CellSize;
+			int32 z = 0;
+			if (XIndex == 0 || YIndex == 0 || XIndex == 2 * HalfWidth - 1 || YIndex == 2 * HalfWidth - 1) z = 0;
+			else z = VerticesPos[XIndex + i][YIndex + j];
+			vertices.Add(FVector(posX, posY, z));
+		}
+	}
+
+	FVector normal(0, 0, 0);
+	FVector center = vertices[4];
+
+	normal += GetFaceNormal(center, vertices[0], vertices[1]);
+	normal += GetFaceNormal(center, vertices[1], vertices[2]);
+	normal += GetFaceNormal(center, vertices[2], vertices[5]);
+	normal += GetFaceNormal(center, vertices[5], vertices[8]);
+	normal += GetFaceNormal(center, vertices[8], vertices[7]);
+	normal += GetFaceNormal(center, vertices[7], vertices[6]);
+	normal += GetFaceNormal(center, vertices[6], vertices[3]);
+	normal += GetFaceNormal(center, vertices[3], vertices[0]);
+
+	normal.Normalize();
+	return normal;
+}
+
+FVector ATerraGen::GetFaceNormal(FVector center, FVector i, FVector j) {
+	FVector first = i - center;
+	FVector second = j - center;
+	return FVector::CrossProduct(second, first);
+}
+"""

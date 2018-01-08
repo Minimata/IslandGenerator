@@ -7,15 +7,27 @@ There's only the vector class in another file, but it's not mine, so it's ok.
 
 To launch the code, simply `python main.py`
 
+Here's what it looks like :
+
+Latest image : ![island](images/island)
+
+These are with 2 warpings :
+
+![island1](images/island1)
+
+![island2](images/island2)
+
+![island3](images/island3)
+
+
 ## Dependencies
 
 The list of dependencies is written in `requirements.txt`.
 There's one more dependency that you need for noise, stored in the zip archive (stop screaming please, it's my git I do what I want).
 This noise library is not my own, you can find its author [here](https://github.com/caseman/noise).
 To install it, just extract it and use `python setup.py install`.
-Also, I use a Vector class, for 2d vector arithmetics.
-I'm not the author of this class, you can find the original code [there](https://gist.github.com/mostley/3819375).
-For our use of vectors, one could use a smaller class, or some module, but I thought "why not I'm lazy" and copy pasted his code.
+Also, I use a Vector class, for vector arithmetics.
+I'm not the author of this class, you can find the original code [there](https://gist.github.com/mcleonard/5351452).
 
 ## Inspirations
 
