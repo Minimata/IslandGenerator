@@ -80,11 +80,15 @@ If you need some features, you can submit an issue, I'll try not to forget to lo
 
 ## What now ?
 
-Before using any of the outputed heightmap as is by the algorithm, I would suggest applying a blur on it.
-Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave. To solve this you'd need some post-process on the image to work on the gradient of the mountain. Get creative.
+The heightmaps that the code outputs are just there for me to judge on the quality of the height calculation algorithm and I don't personnally plan on using these maps as is. The height values are 8 bits, so you only have 256 levels of height possible, which can be a quite low resolution depending on what you want to do with it.
 
-Do your stuff with the code, fork it, put it in your own code, whatever you want.
-Just don't kill people with this code please.
+If you were wanting to use these maps as is however, I would suggest two things : 
+* dither it with some blue noise to mitigate the low height resolution.
+* applying a blur on it.
+Also, it can produce some plains at a high altitude, which is not quite how a mountain would behave. To solve this you'd need some post-process on the image to work on the gradient of the mountain maybe, or find a better configuration for the input values. Get creative and goos testing.
+
+Knowing this, you can do your stuff with the code, fork it, put it in your own code, whatever you want.
+Just don't kill people with it please.
 Killing is not nice.
 
 If you reuse this code, that would be nice to mention me somewhere with either :
